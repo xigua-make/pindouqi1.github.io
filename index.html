@@ -1355,6 +1355,7 @@
             font-size: 0.9rem;
             font-weight: 500;
             color: var(--text-primary);
+            transition: opacity 0.3s;
         }
 
         /* --- 响应式设计 --- */
@@ -1819,6 +1820,19 @@
                 <div class="slider-container">
                     <label style="font-size: 0.8rem; color: var(--text-secondary); min-width: 60px;">手动输入:</label>
                     <input type="number" id="edit-similarityThresholdInput" class="slider-input" min="10" max="100" value="30">
+                </div>
+            </div>
+            
+            <!-- 修复：添加颜色更换功能开关 -->
+            <div class="edit-tool-group">
+                <div class="edit-tool-label">🎨 颜色更换模式</div>
+                <!-- 颜色更换功能开关 -->
+                <div class="color-replace-toggle" id="color-replace-toggle">
+                    <div class="toggle-switch" id="color-replace-switch">
+                        <div class="toggle-slider"></div>
+                    </div>
+                    <span class="toggle-label" style="font-weight: bold;">关闭</span>
+                    <span class="toggle-label" style="opacity: 0.5;">开启</span>
                 </div>
             </div>
             
@@ -3735,6 +3749,41 @@ const attachCanvasListeners = (canvas, isEditMode = false) => {
 const bindEditModeEvents = () => {
     console.log('重新绑定编辑模式事件监听器');
     
+    // 颜色更换功能开关
+    const colorReplaceToggle = document.getElementById('color-replace-toggle');
+    const colorReplaceSwitch = document.getElementById('color-replace-switch');
+    if (colorReplaceToggle && colorReplaceSwitch) {
+        // 移除之前的事件监听器
+        const newToggle = colorReplaceToggle.cloneNode(true);
+        colorReplaceToggle.parentNode.replaceChild(newToggle, colorReplaceToggle);
+        
+        newToggle.addEventListener('click', function() {
+            state.isReplaceMode = !state.isReplaceMode;
+            const switchElement = this.querySelector('.toggle-switch');
+            const labels = this.querySelectorAll('.toggle-label');
+            
+            switchElement.classList.toggle('active');
+            
+            // 更新开关显示
+            if (state.isReplaceMode) {
+                labels[0].style.opacity = '0.5';
+                labels[1].style.opacity = '1';
+                labels[0].style.fontWeight = 'normal';
+                labels[1].style.fontWeight = 'bold';
+            } else {
+                labels[0].style.opacity = '1';
+                labels[1].style.opacity = '0.5';
+                labels[0].style.fontWeight = 'bold';
+                labels[1].style.fontWeight = 'normal';
+            }
+            
+            console.log('颜色更换功能:', state.isReplaceMode ? '开启' : '关闭');
+            
+            // 修复：重新渲染画布以应用或移除点击事件，保持缩放状态
+            renderCanvas(state.isEditMode, true);
+        });
+    }
+    
     // 颜色操作按钮
     const highlightBtn = document.getElementById('edit-highlight-btn');
     const hideBtn = document.getElementById('edit-hide-btn');
@@ -3798,38 +3847,6 @@ const bindEditModeEvents = () => {
             state.showColors = e.target.checked;
             renderCanvas(true, true); // 保持缩放状态
         };
-    }
-    
-    // 颜色更换功能开关
-    const colorReplaceToggle = document.getElementById('color-replace-toggle');
-    if (colorReplaceToggle) {
-        // 移除之前的事件监听器
-        const newToggle = colorReplaceToggle.cloneNode(true);
-        colorReplaceToggle.parentNode.replaceChild(newToggle, colorReplaceToggle);
-        
-        newToggle.addEventListener('click', function() {
-            state.isReplaceMode = !state.isReplaceMode;
-            this.classList.toggle('active');
-            
-            // 更新开关显示
-            const labels = this.parentElement.querySelectorAll('.toggle-label');
-            if (state.isReplaceMode) {
-                labels[0].style.opacity = '0.5';
-                labels[1].style.opacity = '1';
-                labels[0].style.fontWeight = 'normal';
-                labels[1].style.fontWeight = 'bold';
-            } else {
-                labels[0].style.opacity = '1';
-                labels[1].style.opacity = '0.5';
-                labels[0].style.fontWeight = 'bold';
-                labels[1].style.fontWeight = 'normal';
-            }
-            
-            console.log('颜色更换功能:', state.isReplaceMode ? '开启' : '关闭');
-            
-            // 修复：重新渲染画布以应用或移除点击事件，保持缩放状态
-            renderCanvas(state.isEditMode, true);
-        });
     }
     
     // 下载按钮
@@ -4236,8 +4253,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 新增：增强的滑动条初始化
 function initializeEnhancedSliders() {
-    // 移除网格粒度滑动块相关代码
-    
     // 相似度阈值滑动块
     createSliderHandler('similarity-threshold', 'threshold-display', 'similarityThresholdInput', (value) => {
         state.similarityThreshold = parseInt(value);
