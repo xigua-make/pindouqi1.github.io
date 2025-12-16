@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -508,6 +509,12 @@
             animation: shimmer 0.5s ease-in-out;
         }
         
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); opacity: 0; }
+        }
+        
         .brand-btn:hover {
             transform: translateY(-3px) scale(1.05);
             box-shadow: var(--shadow-md);
@@ -559,12 +566,6 @@
         
         .preset-btn:hover::before {
             animation: shimmer 0.5s ease-in-out;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); opacity: 0; }
-            50% { opacity: 1; }
-            100% { transform: translateX(100%) translateY(100%) rotate(45deg); opacity: 0; }
         }
         
         .preset-btn:hover {
@@ -730,6 +731,8 @@
             transition: all 0.3s;
             text-align: center;
             background: rgba(255, 255, 255, 0.9);
+            /* 修复：移动端字体大小防止缩放 */
+            font-size: 16px !important;
         }
         
         .size-inputs input:focus {
@@ -1719,9 +1722,9 @@
                     <div class="setting-group">
                         <label class="setting-label">图纸尺寸（网格粒度/控制细节程度）</label>
                         <div class="size-inputs">
-                            <input type="number" id="width-input" value="64" min="10" max="200" placeholder="宽度">
+                            <input type="tel" id="width-input" value="64" min="10" max="200" placeholder="宽度">
                             <span class="separator">×</span>
-                            <input type="number" id="height-input" value="64" min="10" max="200" placeholder="高度">
+                            <input type="tel" id="height-input" value="64" min="10" max="200" placeholder="高度">
                         </div>
                     </div>
                 </div>
@@ -4101,161 +4104,187 @@ const handleFile = (file) => {
 
 // --- Event Listeners ---
 
-// 初始化激活系统
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('=== 页面加载完成，开始初始化 ===');
+// 新增：尺寸输入框处理器 - 修复核心问题
+function initializeSizeInputs() {
+    console.log('初始化尺寸输入框处理器');
     
-    // 首先初始化激活系统
-    initializeActivation();
+    const widthInput = document.getElementById('width-input');
+    const heightInput = document.getElementById('height-input');
+    const generateBtn = document.getElementById('generate-btn');
     
-    // Home screen upload
-    const homeUploadArea = document.getElementById('home-upload-area');
-    const homeFileInput = document.getElementById('home-file-input');
+    if (!widthInput || !heightInput || !generateBtn) {
+        console.warn('尺寸输入框或生成按钮未找到');
+        return;
+    }
     
-    if (homeUploadArea && homeFileInput) {
-        // 点击上传
-        homeUploadArea.addEventListener('click', () => {
-            console.log('点击上传区域');
-            homeFileInput.click();
+    // 验证输入值
+    function validateSizeValue(value, min = 10, max = 200) {
+        const numValue = parseInt(value);
+        if (isNaN(numValue) || numValue < min) {
+            return min;
+        }
+        if (numValue > max) {
+            return max;
+        }
+        return numValue;
+    }
+    
+    // 处理尺寸变化
+    function handleSizeChange() {
+        console.log('尺寸输入变化');
+        
+        // 验证并修正值
+        widthInput.value = validateSizeValue(widthInput.value);
+        heightInput.value = validateSizeValue(heightInput.value);
+        
+        console.log(`新尺寸: ${widthInput.value} x ${heightInput.value}`);
+        
+        // 如果有图片，自动重新处理
+        if (state.originalImage) {
+            processImage();
+        }
+    }
+    
+    // 为宽度输入框添加事件监听器
+    widthInput.addEventListener('input', function() {
+        console.log('宽度输入:', this.value);
+        // 延迟处理，避免频繁触发
+        clearTimeout(widthInput.dataset.timeout);
+        widthInput.dataset.timeout = setTimeout(handleSizeChange, 500);
+    });
+    
+    widthInput.addEventListener('change', function() {
+        console.log('宽度确认:', this.value);
+        clearTimeout(widthInput.dataset.timeout);
+        handleSizeChange();
+    });
+    
+    widthInput.addEventListener('blur', function() {
+        console.log('宽度失去焦点:', this.value);
+        clearTimeout(widthInput.dataset.timeout);
+        handleSizeChange();
+    });
+    
+    // 为高度输入框添加事件监听器
+    heightInput.addEventListener('input', function() {
+        console.log('高度输入:', this.value);
+        // 延迟处理，避免频繁触发
+        clearTimeout(heightInput.dataset.timeout);
+        heightInput.dataset.timeout = setTimeout(handleSizeChange, 500);
+    });
+    
+    heightInput.addEventListener('change', function() {
+        console.log('高度确认:', this.value);
+        clearTimeout(heightInput.dataset.timeout);
+        handleSizeChange();
+    });
+    
+    heightInput.addEventListener('blur', function() {
+        console.log('高度失去焦点:', this.value);
+        clearTimeout(heightInput.dataset.timeout);
+        handleSizeChange();
+    });
+    
+    // 为生成按钮添加点击事件（确保它存在）
+    generateBtn.onclick = function() {
+        console.log('生成按钮被点击');
+        
+        // 验证尺寸
+        widthInput.value = validateSizeValue(widthInput.value);
+        heightInput.value = validateSizeValue(heightInput.value);
+        
+        if (!state.originalImage) {
+            alert('请先上传图片！');
+            return;
+        }
+        
+        console.log('开始生成图纸，尺寸:', widthInput.value, 'x', heightInput.value);
+        processImage();
+    };
+    
+    // 移动端特殊处理
+    if ('ontouchstart' in window) {
+        // 防止iOS缩放
+        widthInput.style.fontSize = '16px';
+        heightInput.style.fontSize = '16px';
+        
+        // 触摸事件
+        widthInput.addEventListener('touchstart', function(e) {
+            // 延迟一下防止与滑动条冲突
+            setTimeout(() => {
+                this.select();
+            }, 100);
+        }, { passive: true });
+        
+        heightInput.addEventListener('touchstart', function(e) {
+            setTimeout(() => {
+                this.select();
+            }, 100);
+        }, { passive: true });
+        
+        // 处理移动端输入法
+        widthInput.addEventListener('compositionstart', function() {
+            this.dataset.composing = 'true';
         });
         
-        // 文件选择
-        homeFileInput.addEventListener('change', (e) => {
-            console.log('文件选择变化', e.target.files);
-            if (e.target.files && e.target.files[0]) {
-                handleFile(e.target.files[0]);
-            }
+        widthInput.addEventListener('compositionend', function() {
+            this.dataset.composing = 'false';
+            setTimeout(handleSizeChange, 100);
         });
         
-        // 拖拽上传
-        homeUploadArea.addEventListener('dragover', (e) => {
+        heightInput.addEventListener('compositionstart', function() {
+            this.dataset.composing = 'true';
+        });
+        
+        heightInput.addEventListener('compositionend', function() {
+            this.dataset.composing = 'false';
+            setTimeout(handleSizeChange, 100);
+        });
+    }
+    
+    // 输入验证 - 只允许数字
+    widthInput.addEventListener('keydown', function(e) {
+        // 允许数字、退格、删除、方向键、Tab键
+        const allowedKeys = [
+            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+            'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+            'Tab', 'Home', 'End'
+        ];
+        
+        if (!allowedKeys.includes(e.key)) {
             e.preventDefault();
-            homeUploadArea.classList.add('dragover');
-        });
+        }
+    });
+    
+    heightInput.addEventListener('keydown', function(e) {
+        const allowedKeys = [
+            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+            'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+            'Tab', 'Home', 'End'
+        ];
         
-        homeUploadArea.addEventListener('dragleave', () => {
-            homeUploadArea.classList.remove('dragover');
-        });
-        
-        homeUploadArea.addEventListener('drop', (e) => {
+        if (!allowedKeys.includes(e.key)) {
             e.preventDefault();
-            homeUploadArea.classList.remove('dragover');
-            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                handleFile(e.dataTransfer.files[0]);
-            }
-        });
-    }
+        }
+    });
     
-    // App screen upload
-    const uploadArea = document.getElementById('upload-area');
-    const fileInput = document.getElementById('file-input');
+    // 防止粘贴非数字内容
+    widthInput.addEventListener('paste', function(e) {
+        e.preventDefault();
+        const pasteData = (e.clipboardData || window.clipboardData).getData('text');
+        const numbers = pasteData.replace(/[^0-9]/g, '');
+        document.execCommand('insertText', false, numbers);
+    });
     
-    if (uploadArea && fileInput) {
-        // 点击上传
-        uploadArea.addEventListener('click', () => {
-            console.log('点击应用内上传区域');
-            fileInput.click();
-        });
-        
-        // 文件选择
-        fileInput.addEventListener('change', (e) => {
-            console.log('应用内文件选择变化', e.target.files);
-            if (e.target.files && e.target.files[0]) {
-                handleFile(e.target.files[0]);
-            }
-        });
-        
-        // 拖拽上传
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('dragover');
-        });
-        
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('dragover');
-        });
-        
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('dragover');
-            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                handleFile(e.dataTransfer.files[0]);
-            }
-        });
-    }
+    heightInput.addEventListener('paste', function(e) {
+        e.preventDefault();
+        const pasteData = (e.clipboardData || window.clipboardData).getData('text');
+        const numbers = pasteData.replace(/[^0-9]/g, '');
+        document.execCommand('insertText', false, numbers);
+    });
     
-    // New image button
-    const newImageBtn = document.getElementById('new-image-btn');
-    if (newImageBtn) {
-        newImageBtn.addEventListener('click', () => {
-            // 返回首页
-            document.getElementById('app-screen').style.display = 'none';
-            document.getElementById('edit-mode-screen').style.display = 'none';
-            document.getElementById('home-screen').style.display = 'flex';
-            
-            // 清空状态
-            state.originalImage = null;
-            state.colorData = [];
-            state.initialMappedData = [];
-            state.mergedData = [];
-            state.externalBackground = [];
-            state.colorCounts = {};
-            state.highlightedColor = null;
-            state.hiddenColors.clear();
-            state.selectedColor = null;
-            state.selectedCell = null;
-            state.zoomLevel = 100;
-            state.isEditMode = false;
-            state.isReplaceMode = false;
-            
-            // 重置文件输入
-            if (homeFileInput) homeFileInput.value = '';
-            if (fileInput) fileInput.value = '';
-        });
-    }
-    
-    // Edit mode button
-    const editModeBtn = document.getElementById('edit-mode-btn');
-    const editModeScreen = document.getElementById('edit-mode-screen');
-    if (editModeBtn && editModeScreen) {
-        editModeBtn.addEventListener('click', () => {
-            if (!state.colorData || state.colorData.length === 0) {
-                alert('请先在主界面生成图纸');
-                return;
-            }
-            
-            state.isEditMode = true;
-            document.getElementById('app-screen').style.display = 'none';
-            document.getElementById('home-screen').style.display = 'none';
-            document.getElementById('edit-mode-screen').style.display = 'flex';
-            renderCanvas(true);
-        });
-    }
-    
-    // Back to main button - 修复语法错误
-    const backToMainBtn = document.getElementById('back-to-main-btn');
-    if (backToMainBtn) {
-        backToMainBtn.addEventListener('click', () => {
-            state.isEditMode = false;
-            state.isReplaceMode = false;
-            document.getElementById('edit-mode-screen').style.display = 'none';
-            document.getElementById('app-screen').style.display = 'block';
-            document.getElementById('home-screen').style.display = 'none';
-        });
-    }
-    
-    // Initialize UI
-    initializeUI();
-    
-    // 初始化移动设备优化
-    initializeMobileOptimizations();
-    
-    // 初始化线条增强功能
-    initializeLineEnhancement();
-    
-    // 初始化增强的滑动条
-    initializeEnhancedSliders();
-});
+    console.log('尺寸输入框处理器初始化完成');
+}
 
 // 修复：增强的滑动条处理函数 - 完全解决移动端输入问题
 function createSliderHandler(sliderId, valueDisplayId, inputId, callback) {
@@ -4424,7 +4453,6 @@ function createSliderHandler(sliderId, valueDisplayId, inputId, callback) {
         }
     });
     
-    // 输入完成事件
     input.addEventListener('change', function(e) {
         isInputting = false;
         console.log('输入完成:', e.target.value);
@@ -4670,40 +4698,6 @@ const initializeLineEnhancement = () => {
     }
 };
 
-// 修复：确保输入框样式支持移动端
-function fixInputStyles() {
-    const inputs = document.querySelectorAll('.slider-input');
-    inputs.forEach(input => {
-        // 防止iOS自动缩放
-        input.style.fontSize = '16px';
-        
-        // 确保输入框可以获得焦点
-        input.setAttribute('autocomplete', 'off');
-        input.setAttribute('autocorrect', 'off');
-        input.setAttribute('autocapitalize', 'off');
-        input.setAttribute('spellcheck', 'false');
-        
-        // 设置input类型为tel，在移动端会弹出数字键盘
-        if (input.type !== 'number') {
-            input.type = 'tel';
-        }
-        
-        // 移除可能干扰的pattern属性
-        input.removeAttribute('pattern');
-    });
-}
-
-// 在DOM加载完成后修复输入框样式
-document.addEventListener('DOMContentLoaded', function() {
-    // 延迟一下确保所有元素都已加载
-    setTimeout(fixInputStyles, 500);
-});
-
-// 在初始化增强滑动条后也修复样式
-window.addEventListener('load', function() {
-    setTimeout(fixInputStyles, 100);
-});
-
 // 修复下载功能 - 使用新建文本文档中的下载代码
 const downloadPattern = (isEditMode = false) => {
     if (!state.colorData || state.colorData.length === 0) {
@@ -4929,15 +4923,6 @@ const downloadPattern = (isEditMode = false) => {
     }
 };
 
-// 统一的下载函数 - 修复编辑模式下载功能
-document.getElementById('download-btn')?.addEventListener('click', () => {
-    downloadPattern(false);
-});
-
-document.getElementById('edit-download-btn')?.addEventListener('click', () => {
-    downloadPattern(true);
-});
-
 // 添加辅助函数计算合并区域数
 function countMergedRegions(originalData, mergedData) {
     let count = 0;
@@ -4951,15 +4936,224 @@ function countMergedRegions(originalData, mergedData) {
     return count;
 }
 
+// 修复：确保输入框样式支持移动端
+function fixInputStyles() {
+    const inputs = document.querySelectorAll('.slider-input');
+    inputs.forEach(input => {
+        // 防止iOS自动缩放
+        input.style.fontSize = '16px';
+        
+        // 确保输入框可以获得焦点
+        input.setAttribute('autocomplete', 'off');
+        input.setAttribute('autocorrect', 'off');
+        input.setAttribute('autocapitalize', 'off');
+        input.setAttribute('spellcheck', 'false');
+        
+        // 设置input类型为tel，在移动端会弹出数字键盘
+        if (input.type !== 'number') {
+            input.type = 'tel';
+        }
+        
+        // 移除可能干扰的pattern属性
+        input.removeAttribute('pattern');
+    });
+}
+
+// 在DOM加载完成后修复输入框样式
+document.addEventListener('DOMContentLoaded', function() {
+    // 延迟一下确保所有元素都已加载
+    setTimeout(fixInputStyles, 500);
+});
+
+// 在初始化增强滑动条后也修复样式
+window.addEventListener('load', function() {
+    setTimeout(fixInputStyles, 100);
+});
+
+// 修复下载功能 - 使用新建文本文档中的下载代码
+// 统一的下载函数 - 修复编辑模式下载功能
+document.getElementById('download-btn')?.addEventListener('click', () => {
+    downloadPattern(false);
+});
+
+document.getElementById('edit-download-btn')?.addEventListener('click', () => {
+    downloadPattern(true);
+});
+
+// 初始化主事件监听器
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('=== 页面加载完成，开始初始化 ===');
+    
+    // 首先初始化激活系统
+    initializeActivation();
+    
+    // 添加尺寸输入框初始化 - 修复核心问题
+    initializeSizeInputs();
+    
+    // 初始化移动设备优化
+    initializeMobileOptimizations();
+    
+    // 初始化线条增强功能
+    initializeLineEnhancement();
+    
+    // 初始化增强的滑动条
+    initializeEnhancedSliders();
+    
+    // Home screen upload
+    const homeUploadArea = document.getElementById('home-upload-area');
+    const homeFileInput = document.getElementById('home-file-input');
+    
+    if (homeUploadArea && homeFileInput) {
+        // 点击上传
+        homeUploadArea.addEventListener('click', () => {
+            console.log('点击上传区域');
+            homeFileInput.click();
+        });
+        
+        // 文件选择
+        homeFileInput.addEventListener('change', (e) => {
+            console.log('文件选择变化', e.target.files);
+            if (e.target.files && e.target.files[0]) {
+                handleFile(e.target.files[0]);
+            }
+        });
+        
+        // 拖拽上传
+        homeUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            homeUploadArea.classList.add('dragover');
+        });
+        
+        homeUploadArea.addEventListener('dragleave', () => {
+            homeUploadArea.classList.remove('dragover');
+        });
+        
+        homeUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            homeUploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+    }
+    
+    // App screen upload
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('file-input');
+    
+    if (uploadArea && fileInput) {
+        // 点击上传
+        uploadArea.addEventListener('click', () => {
+            console.log('点击应用内上传区域');
+            fileInput.click();
+        });
+        
+        // 文件选择
+        fileInput.addEventListener('change', (e) => {
+            console.log('应用内文件选择变化', e.target.files);
+            if (e.target.files && e.target.files[0]) {
+                handleFile(e.target.files[0]);
+            }
+        });
+        
+        // 拖拽上传
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+    }
+    
+    // New image button
+    const newImageBtn = document.getElementById('new-image-btn');
+    if (newImageBtn) {
+        newImageBtn.addEventListener('click', () => {
+            // 返回首页
+            document.getElementById('app-screen').style.display = 'none';
+            document.getElementById('edit-mode-screen').style.display = 'none';
+            document.getElementById('home-screen').style.display = 'flex';
+            
+            // 清空状态
+            state.originalImage = null;
+            state.colorData = [];
+            state.initialMappedData = [];
+            state.mergedData = [];
+            state.externalBackground = [];
+            state.colorCounts = {};
+            state.highlightedColor = null;
+            state.hiddenColors.clear();
+            state.selectedColor = null;
+            state.selectedCell = null;
+            state.zoomLevel = 100;
+            state.isEditMode = false;
+            state.isReplaceMode = false;
+            
+            // 重置文件输入
+            if (homeFileInput) homeFileInput.value = '';
+            if (fileInput) fileInput.value = '';
+        });
+    }
+    
+    // Edit mode button
+    const editModeBtn = document.getElementById('edit-mode-btn');
+    const editModeScreen = document.getElementById('edit-mode-screen');
+    if (editModeBtn && editModeScreen) {
+        editModeBtn.addEventListener('click', () => {
+            if (!state.colorData || state.colorData.length === 0) {
+                alert('请先在主界面生成图纸');
+                return;
+            }
+            
+            state.isEditMode = true;
+            document.getElementById('app-screen').style.display = 'none';
+            document.getElementById('home-screen').style.display = 'none';
+            document.getElementById('edit-mode-screen').style.display = 'flex';
+            renderCanvas(true);
+        });
+    }
+    
+    // Back to main button - 修复语法错误
+    const backToMainBtn = document.getElementById('back-to-main-btn');
+    if (backToMainBtn) {
+        backToMainBtn.addEventListener('click', () => {
+            state.isEditMode = false;
+            state.isReplaceMode = false;
+            document.getElementById('edit-mode-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'block';
+            document.getElementById('home-screen').style.display = 'none';
+        });
+    }
+    
+    // Initialize UI
+    initializeUI();
+});
+
 // 额外的备用初始化
 window.addEventListener('load', function() {
     console.log('=== 页面完全加载完成 ===');
-    // 再次检查激活系统是否正常初始化
+    // 再次检查激活系统是否正常工作
     const activateBtn = document.getElementById('activate-btn');
-    if (activateBtn && !activateBtn.hasAttribute('data-initialized')) {
-        console.log('备用初始化激活系统');
-        initializeActivation();
-        activateBtn.setAttribute('data-initialized', 'true');
+    const activationInput = document.getElementById('activation-code');
+    
+    if (activateBtn && activationInput) {
+        // 检查是否有事件监听器
+        const hasClickListener = activateBtn.onclick || activateBtn.hasAttribute('data-click-bound');
+        if (!hasClickListener) {
+            console.log('备用初始化激活系统');
+            initializeActivation();
+            activateBtn.setAttribute('data-click-bound', 'true');
+        }
     }
 });
 
