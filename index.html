@@ -1,12 +1,1572 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-   最近有很多人在白嫖 您是真的活不起了吗
-    净干缺德事 实在活不起了吧 你就自个挖个坑埋了
-                  少点粮食 给国家清清祸害
-        优化了一些机制 新地址 新激活码已经更新 
-          老客户的激活码已经自动开通 可以继续使用
-               请到教程页面领取新地址 激活使用
-</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>十字绣图纸生成器 -西瓜的资料铺制作 Cross Stitch Pattern Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --accent-color: #ec4899;
+            --bg-glass: rgba(255, 255, 255, 0.1);
+            --border-glass: rgba(255, 255, 255, 0.2);
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.05" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,138.7C960,139,1056,117,1152,112C1248,107,1344,117,1392,122.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
+            background-size: cover;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
+            animation: fadeIn 1s ease;
+        }
+
+        .control-panel {
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid var(--border-glass);
+            padding: 2rem;
+            height: fit-content;
+            position: sticky;
+            top: 2rem;
+        }
+
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .upload-area:hover {
+            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .upload-area.dragover {
+            border-color: var(--accent-color);
+            background: rgba(236, 72, 153, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .upload-text {
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-hint {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .preview-container {
+            margin-bottom: 2rem;
+            display: none;
+        }
+
+        .preview-image {
+            width: 100%;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .control-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .control-value {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            transition: transform 0.2s ease;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            transition: transform 0.2s ease;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            margin-top: 0.5rem;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .workspace {
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid var(--border-glass);
+            padding: 2rem;
+            min-height: 600px;
+        }
+
+        .canvas-container {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: none;
+            position: relative;
+            overflow: auto;
+        }
+
+        #patternCanvas {
+            display: block;
+            margin: 0 auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            cursor: grab;
+        }
+
+        #patternCanvas:active {
+            cursor: grabbing;
+        }
+
+        .zoom-controls {
+            position: sticky;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        .zoom-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary-color);
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .zoom-btn:hover {
+            background: var(--secondary-color);
+            transform: scale(1.1);
+        }
+
+        .zoom-level {
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .color-list {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: none;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .color-list h3 {
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 0.5rem;
+            max-height: 350px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        .color-grid::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .color-grid::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .color-grid::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        .color-grid::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        .color-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 8px;
+            background: #f9fafb;
+            transition: all 0.2s ease;
+            border: 1px solid #e5e7eb;
+            font-size: 0.85rem;
+        }
+
+        .color-item:hover {
+            transform: translateX(5px);
+            background: #f3f4f6;
+            border-color: var(--primary-color);
+        }
+
+        .color-sample {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            border: 2px solid #e5e7eb;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+
+        .color-symbol {
+            font-size: 1.5rem;
+            font-weight: bold;
+            min-width: 25px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .color-info {
+            flex: 1;
+        }
+
+        .color-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.1rem;
+            font-size: 0.9rem;
+        }
+
+        .color-details {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .color-stats {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.1rem;
+            flex-shrink: 0;
+            min-width: 50px;
+        }
+
+        .color-count {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+        }
+
+        .color-percentage {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            color: white;
+            text-align: center;
+            margin-top: 1rem;
+            font-weight: 500;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+            animation: slideInRight 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--error-color);
+        }
+
+        .toast.warning {
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .stats-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 10px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .control-panel {
+                position: static;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .color-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .action-buttons .btn {
+            flex: 1;
+        }
+
+        .clear-btn {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .clear-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>十字绣图纸生成器-西瓜的资料铺制作</h1>
+            <p class="subtitle">将您的图片转换为精美的十字绣图案 淘宝店铺：西瓜的资料铺制作 倒卖必究 版权所有</p>
+        </header>
+
+        <main class="main-content">
+            <aside class="control-panel">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📸</div>
+                    <div class="upload-text">点击或拖拽上传图片</div>
+                    <div class="upload-hint">支持 JPG、PNG、GIF 格式</div>
+                    <input type="file" id="fileInput" accept="image/*">
+                </div>
+
+                <div class="preview-container" id="previewContainer">
+                    <img class="preview-image" id="previewImage" alt="预览图片">
+                    <button class="btn btn-secondary" onclick="clearImage()">清除图片</button>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">
+                        <span>宽度（格数）</span>
+                        <span class="control-value" id="widthValue">50</span>
+                    </label>
+                    <input type="range" class="slider" id="widthSlider" min="20" max="150" value="50">
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">
+                        <span>高度（格数）</span>
+                        <span class="control-value" id="heightValue">50</span>
+                    </label>
+                    <input type="range" class="slider" id="heightSlider" min="20" max="150" value="50">
+                </div>
+
+                <div class="control-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" class="checkbox" id="aspectRatio" checked>
+                        <label for="aspectRatio">保持原始比例</label>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">
+                        <span>颜色数量</span>
+                        <span class="control-value" id="colorValue">15</span>
+                    </label>
+                    <input type="range" class="slider" id="colorSlider" min="5" max="30" value="15">
+                </div>
+
+                <button class="btn btn-primary" id="generateBtn" onclick="generatePattern()" disabled>
+                    生成十字绣图纸
+                </button>
+
+                <div class="action-buttons" id="actionButtons" style="display: none;">
+                    <button class="btn btn-secondary" onclick="downloadPattern()">
+                        📥 下载完整图纸
+                    </button>
+                    <button class="btn btn-secondary" onclick="printPattern()">
+                        🖨️ 打印
+                    </button>
+                </div>
+            </aside>
+
+            <section class="workspace">
+                <div class="canvas-container" id="canvasContainer">
+                    <div class="zoom-controls" id="zoomControls" style="display: none;">
+                        <button class="zoom-btn" onclick="zoomOut()">−</button>
+                        <div class="zoom-level" id="zoomLevel">100%</div>
+                        <button class="zoom-btn" onclick="zoomIn()">+</button>
+                    </div>
+                    <canvas id="patternCanvas"></canvas>
+                </div>
+
+                <div class="color-list" id="colorList">
+                    <h3>🎨 颜色清单</h3>
+                    <div class="color-grid" id="colorItems"></div>
+                </div>
+
+                <div class="stats-panel" id="statsPanel">
+                    <h3>📊 统计信息</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalStitches">0</div>
+                            <div class="stat-label">总针数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="threadLength">0m</div>
+                            <div class="stat-label">预估用线</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="gridSize">0×0</div>
+                            <div class="stat-label">网格尺寸</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="colorCount">0</div>
+                            <div class="stat-label">颜色数量</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div class="loading" id="loading">
+        <div class="loading-spinner"></div>
+        <div class="loading-text" id="loadingText">正在生成图纸...</div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 十字绣符号系统
+        const CROSS_STITCH_SYMBOLS = [
+            '●', '■', '▲', '♦', '★', '▼', '◆', '♥',
+            '○', '□', '△', '◇', '☆', '▽', '◊', '♡',
+            '✦', '✧', '✩', '✪', '✫', '✬', '✭', '✮',
+            '✯', '✰', '✱', '✲', '✳', '✴', '✵', '✶'
+        ];
+
+        // 颜色名称映射
+        const COLOR_NAMES = {
+            '#FF0000': '红色',
+            '#00FF00': '绿色',
+            '#0000FF': '蓝色',
+            '#FFFF00': '黄色',
+            '#FF00FF': '品红',
+            '#00FFFF': '青色',
+            '#FFA500': '橙色',
+            '#800080': '紫色',
+            '#FFC0CB': '粉色',
+            '#A52A2A': '棕色',
+            '#808080': '灰色',
+            '#000000': '黑色',
+            '#FFFFFF': '白色'
+        };
+
+        let uploadedImage = null;
+        let processedData = null;
+        let currentZoom = 1;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            const widthSlider = document.getElementById('widthSlider');
+            const heightSlider = document.getElementById('heightSlider');
+            const colorSlider = document.getElementById('colorSlider');
+            const aspectRatio = document.getElementById('aspectRatio');
+
+            // 上传区域点击
+            uploadArea.addEventListener('click', () => fileInput.click());
+
+            // 文件选择
+            fileInput.addEventListener('change', handleFileSelect);
+
+            // 拖拽上传
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFile(files[0]);
+                }
+            });
+
+            // 滑块事件
+            widthSlider.addEventListener('input', (e) => {
+                document.getElementById('widthValue').textContent = e.target.value;
+                if (aspectRatio.checked && uploadedImage) {
+                    updateHeightByAspectRatio();
+                }
+            });
+
+            heightSlider.addEventListener('input', (e) => {
+                document.getElementById('heightValue').textContent = e.target.value;
+                if (aspectRatio.checked && uploadedImage) {
+                    updateWidthByAspectRatio();
+                }
+            });
+
+            colorSlider.addEventListener('input', (e) => {
+                document.getElementById('colorValue').textContent = e.target.value;
+            });
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+
+        function handleFile(file) {
+            if (!file.type.match('image.*')) {
+                showToast('请选择图片文件！', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    uploadedImage = img;
+                    displayPreview(e.target.result);
+                    updateSlidersByImage();
+                    document.getElementById('generateBtn').disabled = false;
+                    showToast('图片上传成功！', 'success');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function displayPreview(src) {
+            const previewContainer = document.getElementById('previewContainer');
+            const previewImage = document.getElementById('previewImage');
+            previewImage.src = src;
+            previewContainer.style.display = 'block';
+        }
+
+        function updateSlidersByImage() {
+            if (!uploadedImage) return;
+
+            const maxWidth = 150;
+            const maxHeight = 150;
+            const aspectRatio = uploadedImage.width / uploadedImage.height;
+
+            let width = 50;
+            let height = 50;
+
+            if (aspectRatio > 1) {
+                width = Math.min(100, maxWidth);
+                height = Math.round(width / aspectRatio);
+            } else {
+                height = Math.min(100, maxHeight);
+                width = Math.round(height * aspectRatio);
+            }
+
+            document.getElementById('widthSlider').value = width;
+            document.getElementById('widthValue').textContent = width;
+            document.getElementById('heightSlider').value = height;
+            document.getElementById('heightValue').textContent = height;
+        }
+
+        function updateHeightByAspectRatio() {
+            if (!uploadedImage) return;
+            const width = parseInt(document.getElementById('widthSlider').value);
+            const aspectRatio = uploadedImage.width / uploadedImage.height;
+            const height = Math.round(width / aspectRatio);
+            const heightSlider = document.getElementById('heightSlider');
+            heightSlider.value = Math.max(20, Math.min(150, height));
+            document.getElementById('heightValue').textContent = heightSlider.value;
+        }
+
+        function updateWidthByAspectRatio() {
+            if (!uploadedImage) return;
+            const height = parseInt(document.getElementById('heightSlider').value);
+            const aspectRatio = uploadedImage.width / uploadedImage.height;
+            const width = Math.round(height * aspectRatio);
+            const widthSlider = document.getElementById('widthSlider');
+            widthSlider.value = Math.max(20, Math.min(150, width));
+            document.getElementById('widthValue').textContent = widthSlider.value;
+        }
+
+        function clearImage() {
+            uploadedImage = null;
+            processedData = null;
+            document.getElementById('previewContainer').style.display = 'none';
+            document.getElementById('canvasContainer').style.display = 'none';
+            document.getElementById('colorList').style.display = 'none';
+            document.getElementById('statsPanel').style.display = 'none';
+            document.getElementById('actionButtons').style.display = 'none';
+            document.getElementById('generateBtn').disabled = true;
+            document.getElementById('fileInput').value = '';
+            document.getElementById('zoomControls').style.display = 'none';
+            showToast('图片已清除', 'success');
+        }
+
+        async function generatePattern() {
+            if (!uploadedImage) {
+                showToast('请先上传图片！', 'error');
+                return;
+            }
+
+            showLoading(true, '正在分析图片...');
+            
+            try {
+                const gridWidth = parseInt(document.getElementById('widthSlider').value);
+                const gridHeight = parseInt(document.getElementById('heightSlider').value);
+                const colorCount = parseInt(document.getElementById('colorSlider').value);
+
+                showLoading(true, '正在处理图片...');
+                
+                // 创建临时canvas处理图片
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                
+                // 根据网格尺寸调整图片采样密度
+                const maxSize = 800;
+                let scale = 1;
+                if (uploadedImage.width > maxSize || uploadedImage.height > maxSize) {
+                    scale = Math.min(maxSize / uploadedImage.width, maxSize / uploadedImage.height);
+                }
+                
+                tempCanvas.width = uploadedImage.width * scale;
+                tempCanvas.height = uploadedImage.height * scale;
+                tempCtx.drawImage(uploadedImage, 0, 0, tempCanvas.width, tempCanvas.height);
+                
+                const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+                
+                showLoading(true, '正在分析颜色...');
+                // 颜色量化
+                const colors = quantizeColors(imageData, colorCount);
+                
+                showLoading(true, '正在生成网格...');
+                // 生成网格数据
+                const gridData = generateGridData(imageData, colors, gridWidth, gridHeight);
+                
+                showLoading(true, '正在渲染图案...');
+                // 渲染图案
+                renderPattern(gridData, colors, gridWidth, gridHeight);
+                
+                // 显示颜色清单
+                displayColorList(colors);
+                
+                // 显示统计信息
+                displayStats(gridData, colors, gridWidth, gridHeight);
+                
+                // 保存完整数据
+                processedData = { 
+                    gridData, 
+                    colors: colors,
+                    gridWidth, 
+                    gridHeight,
+                    originalImage: uploadedImage
+                };
+                
+                document.getElementById('canvasContainer').style.display = 'block';
+                document.getElementById('colorList').style.display = 'block';
+                document.getElementById('statsPanel').style.display = 'block';
+                document.getElementById('actionButtons').style.display = 'flex';
+                document.getElementById('zoomControls').style.display = 'flex';
+                
+                showToast('图纸生成成功！', 'success');
+            } catch (error) {
+                console.error('生成失败:', error);
+                showToast('生成失败：' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // K-means颜色量化算法
+        function quantizeColors(imageData, maxColors) {
+            const pixels = [];
+            const step = 4;
+            
+            for (let i = 0; i < imageData.data.length; i += 4 * step) {
+                pixels.push({
+                    r: imageData.data[i],
+                    g: imageData.data[i + 1],
+                    b: imageData.data[i + 2]
+                });
+            }
+
+            if (pixels.length === 0) return [];
+
+            // 初始化聚类中心
+            let centers = [];
+            for (let i = 0; i < maxColors; i++) {
+                const randomPixel = pixels[Math.floor(Math.random() * pixels.length)];
+                centers.push({...randomPixel});
+            }
+
+            // K-means迭代
+            for (let iteration = 0; iteration < 20; iteration++) {
+                const clusters = Array(maxColors).fill(null).map(() => []);
+                
+                pixels.forEach(pixel => {
+                    let minDistance = Infinity;
+                    let closestCenter = 0;
+                    
+                    centers.forEach((center, index) => {
+                        const distance = euclideanDistance(pixel, center);
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            closestCenter = index;
+                        }
+                    });
+                    
+                    clusters[closestCenter].push(pixel);
+                });
+
+                let changed = false;
+                centers = clusters.map((cluster, index) => {
+                    if (cluster.length === 0) return centers[index];
+                    
+                    const newCenter = {
+                        r: Math.round(cluster.reduce((sum, p) => sum + p.r, 0) / cluster.length),
+                        g: Math.round(cluster.reduce((sum, p) => sum + p.g, 0) / cluster.length),
+                        b: Math.round(cluster.reduce((sum, p) => sum + p.b, 0) / cluster.length)
+                    };
+                    
+                    if (euclideanDistance(newCenter, centers[index]) > 1) {
+                        changed = true;
+                    }
+                    
+                    return newCenter;
+                });
+
+                if (!changed) break;
+            }
+
+            // 添加符号和名称
+            return centers.map((color, index) => {
+                const hex = rgbToHex(color.r, color.g, color.b);
+                return {
+                    ...color,
+                    hex: hex,
+                    symbol: CROSS_STITCH_SYMBOLS[index % CROSS_STITCH_SYMBOLS.length],
+                    name: COLOR_NAMES[hex] || `颜色 ${index + 1}`,
+                    count: 0
+                };
+            });
+        }
+
+        function generateGridData(imageData, colors, gridWidth, gridHeight) {
+            const gridData = [];
+            const cellWidth = imageData.width / gridWidth;
+            const cellHeight = imageData.height / gridHeight;
+
+            for (let y = 0; y < gridHeight; y++) {
+                for (let x = 0; x < gridWidth; x++) {
+                    const centerX = Math.floor(x * cellWidth + cellWidth / 2);
+                    const centerY = Math.floor(y * cellHeight + cellHeight / 2);
+                    
+                    const pixelIndex = (centerY * imageData.width + centerX) * 4;
+                    const pixelColor = {
+                        r: imageData.data[pixelIndex],
+                        g: imageData.data[pixelIndex + 1],
+                        b: imageData.data[pixelIndex + 2]
+                    };
+
+                    const closestColor = findClosestColor(pixelColor, colors);
+                    if (closestColor) {
+                        closestColor.count++;
+                        gridData.push({
+                            x: x,
+                            y: y,
+                            color: closestColor
+                        });
+                    }
+                }
+            }
+
+            return gridData;
+        }
+
+        function findClosestColor(pixel, colors) {
+            if (!colors || colors.length === 0) return null;
+            
+            let minDistance = Infinity;
+            let closestColor = colors[0];
+
+            colors.forEach(color => {
+                if (!color) return;
+                const distance = euclideanDistance(pixel, color);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestColor = color;
+                }
+            });
+
+            return closestColor;
+        }
+
+        function euclideanDistance(c1, c2) {
+            return Math.sqrt(
+                Math.pow(c1.r - c2.r, 2) +
+                Math.pow(c1.g - c2.g, 2) +
+                Math.pow(c1.b - c2.b, 2)
+            );
+        }
+
+        function rgbToHex(r, g, b) {
+            return '#' + [r, g, b].map(x => {
+                const hex = x.toString(16);
+                return hex.length === 1 ? '0' + hex : hex;
+            }).join('').toUpperCase();
+        }
+
+        // 渲染图案 - 恢复原来的正确逻辑
+        function renderPattern(gridData, colors, gridWidth, gridHeight) {
+            const canvas = document.getElementById('patternCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            const cellSize = Math.min(20, Math.floor(800 / Math.max(gridWidth, gridHeight)));
+            const colorListWidth = 250;
+            const colorItemHeight = 50;
+            const colorListHeight = colors.length * colorItemHeight;
+            
+            canvas.width = gridWidth * cellSize + colorListWidth;
+            canvas.height = Math.max(gridHeight * cellSize, colorListHeight);
+            
+            // 清空画布
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制网格和符号 - 恢复原来的正确逻辑
+            gridData.forEach(cell => {
+                const x = cell.x * cellSize;
+                const y = cell.y * cellSize;
+                
+                // 确保颜色对象存在
+                if (!cell.color) return;
+                
+                // 1. 填充颜色 - 整个格子都填充
+                ctx.fillStyle = `rgb(${cell.color.r}, ${cell.color.g}, ${cell.color.b})`;
+                ctx.fillRect(x, y, cellSize, cellSize);
+                
+                // 2. 绘制网格线
+                ctx.strokeStyle = '#e5e7eb';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(x, y, cellSize, cellSize);
+                
+                // 3. 绘制符号 - 确保符号存在且居中
+                if (cell.color.symbol && cellSize >= 10) {
+                    ctx.fillStyle = getContrastColor(cell.color);
+                    const fontSize = Math.max(8, Math.min(cellSize * 0.5, 14));
+                    ctx.font = `${fontSize}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(cell.color.symbol, x + cellSize / 2, y + cellSize / 2);
+                }
+            });
+            
+            // 绘制色号列表
+            colors.forEach((color, index) => {
+                if (!color) return;
+                
+                const y = index * colorItemHeight;
+                
+                // 绘制颜色样本
+                ctx.fillStyle = `rgb(${color.r}, ${color.g}, ${color.b})`;
+                ctx.fillRect(gridWidth * cellSize + 10, y + 10, 30, 30);
+                
+                // 绘制符号
+                if (color.symbol) {
+                    ctx.fillStyle = getContrastColor(color);
+                    ctx.font = '20px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(color.symbol, gridWidth * cellSize + 25, y + 25);
+                }
+                
+                // 绘制颜色名称
+                ctx.fillStyle = '#000000';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'left';
+                ctx.fillText(color.name || `颜色 ${index + 1}`, gridWidth * cellSize + 50, y + 20);
+                
+                // 绘制针数
+                ctx.fillText(`${color.count || 0} 针`, gridWidth * cellSize + 50, y + 38);
+            });
+        }
+
+        function zoomIn() {
+            currentZoom = Math.min(currentZoom * 1.2, 3);
+            updateZoomDisplay();
+            applyZoom();
+        }
+
+        function zoomOut() {
+            currentZoom = Math.max(currentZoom / 1.2, 0.5);
+            updateZoomDisplay();
+            applyZoom();
+        }
+
+        function updateZoomDisplay() {
+            document.getElementById('zoomLevel').textContent = Math.round(currentZoom * 100) + '%';
+        }
+
+        function applyZoom() {
+            const canvas = document.getElementById('patternCanvas');
+            canvas.style.transform = `scale(${currentZoom})`;
+            canvas.style.transformOrigin = 'top left';
+        }
+
+        function getContrastColor(color) {
+            if (!color) return '#000000';
+            const brightness = (color.r * 299 + color.g * 587 + color.b * 114) / 1000;
+            return brightness > 128 ? '#000000' : '#ffffff';
+        }
+
+        function displayColorList(colors) {
+            const colorItems = document.getElementById('colorItems');
+            const totalStitches = colors.reduce((sum, color) => sum + (color.count || 0), 0);
+            
+            colorItems.innerHTML = colors.map((color, index) => {
+                if (!color) return '';
+                const percentage = totalStitches > 0 ? ((color.count / totalStitches) * 100).toFixed(1) : '0';
+                return `
+                    <div class="color-item">
+                        <div class="color-sample" style="background-color: rgb(${color.r}, ${color.g}, ${color.b})"></div>
+                        <div class="color-symbol">${color.symbol || '■'}</div>
+                        <div class="color-info">
+                            <div class="color-name">${color.name || `颜色 ${index + 1}`}</div>
+                            <div class="color-details">RGB(${color.r}, ${color.g}, ${color.b}) | ${color.hex || '#000000'}</div>
+                        </div>
+                        <div class="color-stats">
+                            <div class="color-count">${color.count || 0} 针</div>
+                            <div class="color-percentage">${percentage}%</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function displayStats(gridData, colors, gridWidth, gridHeight) {
+            const totalStitches = gridData.length;
+            const threadLength = Math.ceil(totalStitches * 1.2 / 100);
+            
+            document.getElementById('totalStitches').textContent = totalStitches.toLocaleString();
+            document.getElementById('threadLength').textContent = threadLength + 'm';
+            document.getElementById('gridSize').textContent = `${gridWidth}×${gridHeight}`;
+            document.getElementById('colorCount').textContent = colors.length;
+        }
+
+        async function downloadPattern() {
+            if (!processedData) {
+                showToast('请先生成图纸！', 'error');
+                return;
+            }
+            
+            if (!processedData.gridData || !processedData.colors || !processedData.gridWidth || !processedData.gridHeight) {
+                showToast('数据不完整，请重新生成图纸！', 'error');
+                return;
+            }
+
+            showLoading(true, '正在准备下载...');
+            
+            try {
+                const { gridData, colors, gridWidth, gridHeight } = processedData;
+                
+                // 动态计算合适的单元格大小
+                const maxCanvasSize = 32767;
+                const minCellSize = 8;
+                const maxCellSize = 20;
+                
+                let cellSize = maxCellSize;
+                const estimatedWidth = gridWidth * cellSize + 300;
+                const estimatedHeight = Math.max(gridHeight * cellSize, colors.length * 60);
+                
+                if (estimatedWidth > maxCanvasSize || estimatedHeight > maxCanvasSize) {
+                    const scaleFactor = Math.min(
+                        maxCanvasSize / estimatedWidth,
+                        maxCanvasSize / estimatedHeight
+                    );
+                    cellSize = Math.max(minCellSize, Math.floor(maxCellSize * scaleFactor));
+                }
+                
+                // 创建下载canvas
+                const downloadCanvas = document.createElement('canvas');
+                const ctx = downloadCanvas.getContext('2d');
+                
+                const colorListWidth = 300;
+                const colorItemHeight = 60;
+                const colorListHeight = colors.length * colorItemHeight;
+                
+                downloadCanvas.width = gridWidth * cellSize + colorListWidth;
+                downloadCanvas.height = Math.max(gridHeight * cellSize, colorListHeight) + 100;
+                
+                // 设置背景
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, downloadCanvas.width, downloadCanvas.height);
+                
+                // 绘制标题
+                ctx.fillStyle = '#333333';
+                ctx.font = 'bold 24px Arial';
+                ctx.fillText('十字绣图纸', 20, 40);
+                ctx.font = '14px Arial';
+                ctx.fillStyle = '#666666';
+                ctx.fillText(`生成日期: ${new Date().toLocaleDateString('zh-CN')}`, 20, 65);
+                ctx.fillText(`网格尺寸: ${gridWidth} × ${gridHeight} | 总针数: ${gridData.length}`, 20, 85);
+                
+                // 绘制网格
+                showLoading(true, '正在绘制网格...');
+                gridData.forEach(cell => {
+                    if (!cell || !cell.color) return;
+                    
+                    const x = cell.x * cellSize;
+                    const y = cell.y * cellSize + 100;
+                    
+                    // 1. 填充整个格子
+                    ctx.fillStyle = `rgb(${cell.color.r}, ${cell.color.g}, ${cell.color.b})`;
+                    ctx.fillRect(x, y, cellSize, cellSize);
+                    
+                    // 2. 绘制网格线
+                    ctx.strokeStyle = '#e5e7eb';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(x, y, cellSize, cellSize);
+                    
+                    // 3. 绘制符号
+                    if (cell.color.symbol && cellSize >= 10) {
+                        ctx.fillStyle = getContrastColor(cell.color);
+                        const fontSize = Math.max(6, Math.min(cellSize * 0.6, 12));
+                        ctx.font = `${fontSize}px Arial`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(cell.color.symbol, x + cellSize / 2, y + cellSize / 2);
+                    }
+                });
+                
+                // 绘制色号列表
+                showLoading(true, '正在绘制色号列表...');
+                ctx.fillStyle = '#333333';
+                ctx.font = 'bold 18px Arial';
+                ctx.fillText('色号对照表', gridWidth * cellSize + 20, 40);
+                
+                colors.forEach((color, index) => {
+                    if (!color) return;
+                    
+                    const y = index * colorItemHeight + 100;
+                    
+                    // 绘制颜色样本
+                    ctx.fillStyle = `rgb(${color.r}, ${color.g}, ${color.b})`;
+                    ctx.fillRect(gridWidth * cellSize + 20, y, 40, 40);
+                    
+                    // 绘制边框
+                    ctx.strokeStyle = '#e5e7eb';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(gridWidth * cellSize + 20, y, 40, 40);
+                    
+                    // 绘制符号
+                    if (color.symbol) {
+                        ctx.fillStyle = getContrastColor(color);
+                        ctx.font = '24px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(color.symbol, gridWidth * cellSize + 40, y + 20);
+                    }
+                    
+                    // 绘制颜色信息
+                    ctx.fillStyle = '#333333';
+                    ctx.font = '16px Arial';
+                    ctx.textAlign = 'left';
+                    ctx.fillText(color.name || `颜色 ${index + 1}`, gridWidth * cellSize + 70, y + 20);
+                    ctx.font = '12px Arial';
+                    ctx.fillStyle = '#666666';
+                    ctx.fillText(`色号: ${color.hex || '#000000'}`, gridWidth * cellSize + 70, y + 35);
+                    ctx.fillText(`针数: ${color.count || 0}`, gridWidth * cellSize + 70, y + 48);
+                });
+                
+                showLoading(true, '正在生成下载文件...');
+                
+                // 生成并下载
+                const dataURL = downloadCanvas.toDataURL('image/png', 1.0);
+                
+                const link = document.createElement('a');
+                link.download = `十字绣图纸_${new Date().getTime()}.png`;
+                link.href = dataURL;
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showToast('完整图纸下载成功！', 'success');
+                
+            } catch (error) {
+                console.error('下载失败:', error);
+                showToast('下载失败：' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function printPattern() {
+            if (!processedData) {
+                showToast('请先生成图纸！', 'error');
+                return;
+            }
+            
+            const { gridData, colors, gridWidth, gridHeight } = processedData;
+            
+            const printWindow = window.open('', '_blank');
+            
+            let printContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>十字绣图纸</title>
+                    <style>
+                        @page { margin: 10mm; }
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            margin: 0; 
+                            padding: 20px;
+                        }
+                        .header {
+                            margin-bottom: 20px;
+                        }
+                        .title {
+                            font-size: 24px;
+                            font-weight: bold;
+                            margin-bottom: 5px;
+                        }
+                        .date {
+                            color: #666;
+                            font-size: 14px;
+                        }
+                        .pattern-container {
+                            display: flex;
+                            gap: 30px;
+                        }
+                        .grid {
+                            border: 2px solid #333;
+                            border-collapse: collapse;
+                        }
+                        .grid td {
+                            border: 1px solid #ddd;
+                            width: 10px;
+                            height: 10px;
+                            text-align: center;
+                            vertical-align: middle;
+                            font-size: 8px;
+                            font-family: Arial, sans-serif;
+                        }
+                        .color-list {
+                            min-width: 250px;
+                        }
+                        .color-item {
+                            display: flex;
+                            align-items: center;
+                            margin-bottom: 10px;
+                            padding: 5px;
+                            border: 1px solid #ddd;
+                        }
+                        .color-box {
+                            width: 20px;
+                            height: 20px;
+                            border: 1px solid #999;
+                            margin-right: 10px;
+                        }
+                        .symbol {
+                            font-size: 16px;
+                            font-weight: bold;
+                            margin-right: 10px;
+                            min-width: 20px;
+                            text-align: center;
+                        }
+                        .info {
+                            flex: 1;
+                            font-size: 12px;
+                        }
+                        .name {
+                            font-weight: bold;
+                        }
+                        .details {
+                            color: #666;
+                        }
+                        .footer {
+                            margin-top: 20px;
+                            color: #666;
+                            font-size: 12px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <div class="title">十字绣图纸</div>
+                        <div class="date">生成日期: ${new Date().toLocaleDateString('zh-CN')}</div>
+                    </div>
+                    <div class="pattern-container">
+                        <div>
+                            <table class="grid" cellpadding="0" cellspacing="0">
+            `;
+            
+            // 创建网格数据数组以便正确索引
+            const gridArray = Array(gridHeight).fill(null).map(() => Array(gridWidth).fill(null));
+            gridData.forEach(cell => {
+                if (cell && cell.x < gridWidth && cell.y < gridHeight) {
+                    gridArray[cell.y][cell.x] = cell;
+                }
+            });
+            
+            for (let y = 0; y < gridHeight; y++) {
+                printContent += '<tr>';
+                for (let x = 0; x < gridWidth; x++) {
+                    const cell = gridArray[y][x];
+                    if (cell && cell.color) {
+                        printContent += `<td style="background-color: rgb(${cell.color.r}, ${cell.color.g}, ${cell.color.b}); color: ${getContrastColor(cell.color)}">${cell.color.symbol || '■'}</td>`;
+                    } else {
+                        printContent += '<td style="background-color: white;"></td>';
+                    }
+                }
+                printContent += '</tr>';
+            }
+            
+            printContent += `
+                            </table>
+                        </div>
+                        <div class="color-list">
+                            <h3>色号对照表</h3>
+            `;
+            
+            colors.forEach((color, index) => {
+                if (!color) return;
+                printContent += `
+                    <div class="color-item">
+                        <div class="color-box" style="background-color: rgb(${color.r}, ${color.g}, ${color.b})"></div>
+                        <div class="symbol">${color.symbol || '■'}</div>
+                        <div class="info">
+                            <div class="name">${color.name || `颜色 ${index + 1}`}</div>
+                            <div class="details">色号: ${color.hex || '#000000'} | 针数: ${color.count || 0}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            printContent += `
+                        </div>
+                    </div>
+                    <div class="footer">
+                        网格尺寸: ${gridWidth} × ${gridHeight} | 总针数: ${gridData.length}
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            
+            printWindow.onload = function() {
+                printWindow.print();
+                printWindow.close();
+            };
+            
+            showToast('正在准备打印...', 'success');
+        }
+
+        function showLoading(show, text = '正在生成图纸...') {
+            const loading = document.getElementById('loading');
+            const loadingText = document.getElementById('loadingText');
+            if (show) {
+                loading.style.display = 'block';
+                loadingText.textContent = text;
+            } else {
+                loading.style.display = 'none';
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.style.display = 'block';
+            
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+    </script>
 </body>
 </html>
